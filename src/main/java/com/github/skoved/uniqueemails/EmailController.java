@@ -11,15 +11,32 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Creates an endpoint at http://[your domain]:8080/email/validate. The endpoint calculates
+ * the number of unique emails there are in a list of strings. It does so by using the
+ * EmailValidator found in Apache commons-validator in tandem with custom string processing
+ * algorithms.
+ */
 @RestController
 @RequestMapping("/email")
 public class EmailController {
     private final EmailValidator emailValidator;
 
+    /**
+     * Creates a new EmailController and requests an instance of the EmailValidator
+     */
     public EmailController() {
         emailValidator = EmailValidator.getInstance(false, false);
     }
 
+    /**
+     * Listens for HTTP POST requests to [your domain]:8080/email/validate. Processes each string
+     * and determines whether or not the string is a valid email address. Then determines the number of unique emails
+     * using Gmail account matching.
+     *
+     * @param emails a list of strings received from the client.
+     * @return an integer representing the number of unique and valid emails received from the client.
+     */
     @PostMapping("/validate")
     int validateEmails(@Valid @RequestBody List<String> emails) {
         if (emails == null) {
@@ -56,6 +73,13 @@ public class EmailController {
         return uniqueEmails.size();
     }
 
+    /**
+     * Removes all .s and reformats emails with bangified host routes and % escaped mail routes
+     * so that they only show the email. This is so the emails can be checked for uniqueness.
+     *
+     * @param email a string that contains a valid email
+     * @return the email address of the recipient with all .s removed
+     */
     String formatEmail(String email) {
         String ret = email.replace(".", "");
         ret = ret.replaceAll("\\([\\s\\S]*?\\)", "");
@@ -64,6 +88,13 @@ public class EmailController {
             boolean inQuotes = false;
             String iterVal = ret.split("@")[0];
             String[] split = new String[2];
+            /*
+            * Since emails with bangified host routes will not have .s in them,
+            * they can have part enclosed in "s. This means that I need to see if the
+            * ! appears out side of the "s. If it does then i need to change the email from
+            * [destination uucp domain]![email account name]@[route domain] to:
+            * [email account name]@[destination uucp domain]
+            */
             for (int i = 0; i< iterVal.length(); i++) {
                 char curr = iterVal.charAt(i);
                 if (inQuotes && curr != '\"') {
@@ -82,6 +113,10 @@ public class EmailController {
             return ret;
         }
 
+        /*
+        * retrieves the recipients email out of escaped mail routed emails of the form
+        * [email account name]%[domain of email account]@[routed email server]
+        */
         if (ret.contains("%")) {
             String[] split = ret.split("@");
             split = split[0].split("%");
@@ -91,6 +126,15 @@ public class EmailController {
         return ret;
     }
 
+    /**
+     * Removes comments from a string that contains a valid email. Otherwise returns null.
+     * A comment may appear at the beginning of an email, the end of an email, just before the {@literal @},
+     * or just after the {@literal @}. Comment in an email is of the form, ([comment text here]), and can contain
+     * any characters in it, including a nested comment.
+     *
+     * @param email a string that may or may not be an email
+     * @return either null if it is determined to not be an email or an email with comments removed
+     */
     String removeComments(String email) {
         if (email == null || !email.contains("@")) {
             return null;
@@ -99,6 +143,9 @@ public class EmailController {
         boolean inComment = false;
         boolean inQuotes = false;
         String[] parts = new String[2];
+        /*
+        * finds the first @ symbol not escaped or in "s and splits the string in two parts there
+        */
         for (int i = 0; i < email.length(); i++) {
             char curr = email.charAt(i);
             if (inQuotes && curr != '\"') {
@@ -127,10 +174,17 @@ public class EmailController {
             return null;
         }
 
+        /*
+        * Loops over both parts of the email (before and after the @)
+        */
         for (int x = 0; x < parts.length; x++) {
             int parenDepth = 0;
             int end = -1;
             inQuotes = false;
+            /*
+            * Removes comments from the beginning of the part of the email.
+            * Avoids escaped parenthesis and parenthesis in "s
+             */
             for (int i = 0; i < parts[x].length() && parts[x].charAt(0) == '('; i++) {
                 if (inQuotes && parts[x].charAt(i) != '\"') {
                     continue;
@@ -168,6 +222,10 @@ public class EmailController {
             parenDepth = 0;
             end = -1;
             inQuotes = false;
+            /*
+             * Removes comments from the end of the part of the email.
+             * Avoids escaped parenthesis and parenthesis in "s
+             */
             for (int i = parts[x].length() - 1; i > 0 && parts[x].charAt(parts[x].length() - 1) == ')'; i--) {
                 if (inQuotes && parts[x].charAt(i) != '\"') {
                     continue;
@@ -208,6 +266,13 @@ public class EmailController {
         return parts[0] + "@" + parts[1];
     }
 
+    /**
+     * Emails can be surrounded by {@literal <} {@literal >} characters. This function extracts the part
+     * of the email that we wish to validate.
+     *
+     * @param email a string that may contain an email surround by {@literal <} {@literal >}
+     * @return the string as is or the email if it was surrounded by {@literal <} {@literal >}
+     */
     String unwrap(String email) {
         if (email == null || !email.contains("@")) {
             return email;
@@ -215,6 +280,10 @@ public class EmailController {
         int begin = -1;
         int end = -1;
         boolean inQuotes = false;
+        /*
+        * extracts the part of the string enclosed by < > if both of those characters occur.
+        * If they appear in part of the email enclosed in double quotes they are to be ignored.
+        */
         for (int i = 0; i < email.length(); i++) {
             char curr = email.charAt(i);
             if (inQuotes && curr != '\"') {

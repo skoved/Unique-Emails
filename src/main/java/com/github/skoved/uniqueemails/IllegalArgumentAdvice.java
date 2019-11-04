@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+/**
+ * Handles IllegalArgumentExceptions thrown by the validateEmails method of EmailController.
+ */
 @ControllerAdvice
 public class IllegalArgumentAdvice {
 
