@@ -15,7 +15,9 @@ the same address, and thus the result should be 1.
 
 ## Running the Code
 This project runs on localhost:8080, so please make sure that port 8080 is available on the machine.
-The code can be run using maven. If you do not have maven, the maven wrapper is included (mvnw)
+The code can be run using maven. If you do not have maven, the maven wrapper is included (mvnw).
+I tested this code using Java 8, so this project might not work as expected on older or newer versions
+of Java.
 
 Navigate to the directory that contains this repository on your local machine.
 
