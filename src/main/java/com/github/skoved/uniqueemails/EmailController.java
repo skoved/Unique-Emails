@@ -6,8 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.validator.routines.EmailValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,11 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/email")
 public class EmailController {
-    private final Logger log;
     private final EmailValidator emailValidator;
 
     public EmailController() {
-        log = LoggerFactory.getLogger(EmailController.class);
         emailValidator = EmailValidator.getInstance(false, false);
     }
 
