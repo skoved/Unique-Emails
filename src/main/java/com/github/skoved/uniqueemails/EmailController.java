@@ -53,7 +53,8 @@ public class EmailController {
             String email = removeComments(curr);
             email = unwrap(email);
             //EmailValidator in Commons-Validator in v1.6 has a know issue of validating emails with an opening
-            if (!emailValidator.isValid(email) || email.charAt(0) == ' ') {
+            if (!emailValidator.isValid(email) || email.charAt(0) == ' '
+                    || email.charAt(email.length() - 1) == ' ') {
                 invalidEmails.add(curr);
             } else {
                 emails.remove(i);
