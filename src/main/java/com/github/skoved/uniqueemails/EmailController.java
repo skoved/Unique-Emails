@@ -53,7 +53,7 @@ public class EmailController {
             email = formatEmail(email);
             uniqueEmails.add(email);
         }
-        return emails.size() - uniqueEmails.size();
+        return uniqueEmails.size();
     }
 
     String formatEmail(String email) {
